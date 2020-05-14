@@ -1,72 +1,13 @@
 #define PY_SSIZE_T_CLEAN
 
 #include "/usr/include/python3.8/Python.h"
+#include "common.h"
 #include <iostream>
-#include <vector>
 
 using namespace std;
 
-typedef vector<uint8_t> storage;
-typedef vector<uint8_t>::iterator storage_it;
-
-typedef struct _is {
-    struct _is *next;
-    struct _ts *tstate_head;
-
-    PyObject *modules;
-    PyObject *modules_by_index;
-    PyObject *sysdict;
-    PyObject *builtins;
-    PyObject *importlib;
-
-    PyObject *codec_search_path;
-    PyObject *codec_search_cache;
-    PyObject *codec_error_registry;
-    int codecs_initialized;
-    int fscodec_initialized;
-
-    PyObject *builtins_copy;
-    } PyInterpreterState;
-
-//struct _ts {
-//    struct _ts *prev;
-//    struct _ts *next;
-//    PyInterpreterState *interp;
-//    struct _frame *frame;
-//    int recursion_depth;
-//    char overflowed;
-//    char recursion_critical;
-//    int stackcheck_counter;
-//    int tracing;
-//    int use_tracing;
-//    Py_tracefunc c_profilefunc;
-//    Py_tracefunc c_tracefunc;
-//    PyObject *c_profileobj;
-//    PyObject *c_traceobj;
-//    PyObject *curexc_type;
-//    PyObject *curexc_value;
-//    PyObject *curexc_traceback;
-//    _PyErr_StackItem exc_state;
-//    _PyErr_StackItem *exc_info;
-//    PyObject *dict;  /* Stores per-thread state */
-//    int gilstate_counter;
-//    PyObject *async_exc; /* Asynchronous exception to raise */
-//    unsigned long thread_id; /* Thread id where this tstate was created */
-//    int trash_delete_nesting;
-//    PyObject *trash_delete_later;
-//    void (*on_delete)(void *);
-//    void *on_delete_data;
-//    int coroutine_origin_tracking_depth;
-//    PyObject *async_gen_firstiter;
-//    PyObject *async_gen_finalizer;
-//    PyObject *context;
-//    uint64_t context_ver;
-//    /* Unique thread state id. */
-//    uint64_t id;
-//};
-
-static void print_mem_content(uint8_t *m) {
-    for (int i=0; i<32; ++i) {
+static void print_mem_content(uint8_t *m, int l) {
+    for (int i=0; i<l; ++i) {
         cout << hex << (int)m[i] << " ";
     }
     cout << endl;
@@ -76,28 +17,49 @@ static PyObject *print_basic_info(PyObject *self, PyObject *args) {
     cout << "version: " << Py_GetVersion() << ", ";
     cout << "platform: " << Py_GetPlatform() << ", ";
     cout << "compiler: " << Py_GetCompiler() << ", ";
-    cout << "build: " << Py_GetBuildInfo() << ", ";
+    cout << "build: " << Py_GetBuildInfo() << "\n";
     return self;
+}
+
+static void print_interpreter_state(PyInterpreterState *pis) {
+    cout << "--------------------- interpreter state ---------------------" << '\n';
+    cout << "interpreter state address: " << hex << pis << ", ";
+    cout << "next: " << hex << pis->next << ", ";
+    cout << "tstate_head: " << hex << pis->tstate_head << ", ";
+    cout << "modules: " << hex << pis->modules << ", ";
+    cout << "modules_by_index: " << hex << pis->modules_by_index << ", ";
+    cout << "sysdict: " << hex << pis->sysdict << ", ";
+    cout << "builtins: " << hex << pis->builtins << ", ";
+    cout << "importlib: " << hex << pis->importlib << ", ";
+    cout << "codec_search_path: " << hex << pis->codec_search_path << ", ";
+    cout << "codec_search_cache: " << hex << pis->codec_search_cache << ", ";
+    cout << "codec_error_registry: " << hex << pis->codec_error_registry << ", ";
+    cout << "codecs_initialized: " << hex << pis->codecs_initialized << ", ";
+    cout << "fscodec_initialized: " << hex << pis->fscodec_initialized << ", ";
+    cout << "builtins_copy: " << hex << pis->builtins_copy << "\n";
+    cout << "-------------------------------------------------------------" << '\n';
+}
+
+static void print_thread_state(PyThreadState *pts) {
+    cout << "----------------------- thread state ------------------------" << '\n';
+    cout << "thread state address: " << hex << pts << ", ";
+    cout << "stack frame: " << hex << pts->frame << "\n";
+    cout << "-------------------------------------------------------------" << '\n';
 }
 
 static PyObject *get_interpreter_state(PyObject *self, PyObject *args) {
     PyInterpreterState *interpreter_state = PyInterpreterState_Main();
-    cout << "interpreters list main elem address: " << hex << &interpreter_state << "\n";
-    cout << "thread state address: " << hex << interpreter_state->tstate_head << "\n";
-    cout << "interpreters list next elem address: " << hex << interpreter_state->next << "\n";
+    print_interpreter_state(interpreter_state);
     return self;
 }
 
 static PyObject *get_thread_state(PyObject *self, PyObject *args) {
     PyThreadState thread_state;
-    storage vi(12);
+    PyFrameObject frame_object;
+
     thread_state = *PyThreadState_Get();
-    cout << "thread state address: " << &thread_state << "\n";
-    cout << "prev: " << hex << thread_state.prev << "\n";
-    cout << "next: " << hex << thread_state.next << "\n";
-    cout << "interp: " << hex << thread_state.interp << "\n";
-    cout << "frame: " << hex << thread_state.frame << "\n";
-    print_mem_content((uint8_t *)&thread_state);
+    frame_object = *thread_state.frame;
+    print_thread_state(&thread_state);
     return self;
 }
 
