@@ -47,6 +47,16 @@ static void print_thread_state(PyThreadState *pts) {
     cout << "-------------------------------------------------------------" << '\n';
 }
 
+static void print_stack_frame(PyFrameObject *pfs) {
+    cout << "----------------------- stack frame ------------------------" << '\n';
+    cout << "frame object address: " << hex << pfs << ", ";
+    cout << "frame code address: " << hex << pfs->f_code << "\n";
+    print_mem_content(reinterpret_cast<uint8_t *>(pfs->f_code), 64);
+    reinterpret_cast<uint8_t *>(pfs->f_code)[0] = 0x55;
+    print_mem_content(reinterpret_cast<uint8_t *>(pfs->f_code), 64);
+    cout << "-------------------------------------------------------------" << '\n';
+}
+
 static PyObject *get_interpreter_state(PyObject *self, PyObject *args) {
     PyInterpreterState *interpreter_state = PyInterpreterState_Main();
     print_interpreter_state(interpreter_state);
@@ -55,11 +65,15 @@ static PyObject *get_interpreter_state(PyObject *self, PyObject *args) {
 
 static PyObject *get_thread_state(PyObject *self, PyObject *args) {
     PyThreadState thread_state;
-    PyFrameObject frame_object;
-
     thread_state = *PyThreadState_Get();
-    frame_object = *thread_state.frame;
     print_thread_state(&thread_state);
+    return self;
+}
+
+static PyObject *get_stack_frame(PyObject *self, PyObject *args) {
+    PyFrameObject stack_frame;
+    stack_frame = *PyThreadState_Get()->frame;
+    print_stack_frame(&stack_frame);
     return self;
 }
 
@@ -67,6 +81,7 @@ static PyMethodDef pyternals_meth[] = {
         {"print_basic_info", print_basic_info, METH_VARARGS, "Get the python3.8 interpreter basic info"},
         {"get_thread_state", get_thread_state, METH_VARARGS, "Get the python3.8 thread state data"},
         {"get_interpreter_state", get_interpreter_state, METH_VARARGS, "Get the python3.8 interpreter state data"},
+        {"get_stack_frame", get_stack_frame, METH_VARARGS, "Get the python3.8 current stack frame"},
         {NULL, NULL, 0, NULL}
 };
 
