@@ -51,6 +51,7 @@ static void print_stack_frame(PyFrameObject *pfs) {
     cout << "----------------------- stack frame ------------------------" << '\n';
     cout << "frame object address: " << hex << pfs << ", ";
     cout << "frame code address: " << hex << pfs->f_code << "\n";
+    cout << "trace opcodes: " << hex << pfs->f_trace_opcodes << "\n";
     print_mem_content(reinterpret_cast<uint8_t *>(pfs->f_code), 64);
     reinterpret_cast<uint8_t *>(pfs->f_code)[0] = 0x55;
     print_mem_content(reinterpret_cast<uint8_t *>(pfs->f_code), 64);
